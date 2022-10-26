@@ -1,0 +1,21 @@
+[package]
+name = "awgen"
+version = "0.1.0"
+authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
+edition = "2021"
+description = "The Awgen game engine."
+readme = "README.md"
+homepage = "https://github.com/TheDudeFromCI/Awgen"
+repository = "https://github.com/TheDudeFromCI/Awgen"
+license = "Apache-2.0"
+keywords = ["game", "game engine", "sandbox", "graphics"]
+categories = ["games", "game-engines"]
+
+[dependencies]
+bevy = "0.8.1"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
