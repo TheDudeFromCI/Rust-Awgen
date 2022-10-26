@@ -1,0 +1,40 @@
+name: CI
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install latest
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
+
+    - name: Print Buildtool Versions
+      run: |
+        rustc -Vv
+        cargo -V
+
+    - name: Build Project
+      run: cargo build
+      env:
+        RUSTFLAGS: -D warnings
+
+    - name: Run Unit Tests
+      run: |
+        cargo test --all-targets
+
+    - name: Verify Formatting
+      run: cargo fmt --all -- --check
+
+    - name: Verify Clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Build docs
+      run: cargo doc --document-private-items
