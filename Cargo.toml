@@ -13,6 +13,7 @@ categories = ["games", "game-engines"]
 
 [dependencies]
 bevy = "0.8.1"
+num = "0.4.0"
 
 [profile.dev]
 opt-level = 1

@@ -9,10 +9,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Install latest
+    - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: nightly
         override: true
         components: rustfmt, clippy
 
@@ -31,10 +31,10 @@ jobs:
         cargo test --all-targets
 
     - name: Verify Formatting
-      run: cargo fmt --all -- --check
+      run: cargo +nightly fmt --all -- --check
 
     - name: Verify Clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings
+      run: cargo +nightly clippy --all-targets --all-features -- -D warnings
 
     - name: Build docs
       run: cargo doc --document-private-items
