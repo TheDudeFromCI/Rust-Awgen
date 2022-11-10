@@ -13,12 +13,19 @@ categories = ["games", "game-engines"]
 
 [dependencies]
 bevy = "0.8.1"
-bevy-inspector-egui = "0.13.0"
-iyes_loopless = "0.8.0"
-num = "0.4.0"
+awgen_client = { path = "crates/awgen_client", version = "0.1.0" }
+awgen_network = { path = "crates/awgen_network", version = "0.1.0" }
+awgen_physics = { path = "crates/awgen_physics", version = "0.1.0" }
+awgen_server = { path = "crates/awgen_server", version = "0.1.0" }
+clap = { version = "4.0.22", features = ["derive"] }
 
 [profile.dev]
 opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 3
+
+[workspace]
+members = [
+  "crates/*"
+]

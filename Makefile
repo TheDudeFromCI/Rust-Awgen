@@ -10,7 +10,7 @@ test:
 
 run:
 	@echo Compiling and running development build
-	cargo run --features bevy/dynamic
+	cargo run --features bevy/dynamic -- localhost
 
 fmt:
 	@echo Validating project file formating
