@@ -82,20 +82,20 @@ impl PhysicsFrame {
 
 /// Called every render frame to calculate the physics frame delta for physics
 /// interpolation handling.
-pub fn update_physics_frame(
+pub fn update_physics_render_frame(
     time: Res<Time>,
     tickrate: Res<PhysicsTickrate>,
     mut physics: ResMut<PhysicsFrame>,
 ) {
     let cur_frame = time.seconds_since_startup();
-    let mut next_frame = physics.last_frame + tickrate.delta();
-
-    while cur_frame >= next_frame {
-        physics.frame_num += 1;
-        physics.last_frame = next_frame;
-        next_frame += tickrate.delta();
-    }
-
     let progress = (cur_frame - physics.last_frame) / tickrate.delta();
-    physics.delta = progress as f32;
+    physics.delta = num::clamp(progress as f32, 0.0, 1.0);
+}
+
+
+/// Called at the beginning of a physics frame to prepare the timing for
+/// calculating physics render frames.
+pub fn prepare_physics_render_frame(time: Res<Time>, mut frame: ResMut<PhysicsFrame>) {
+    frame.last_frame = time.seconds_since_startup();
+    frame.frame_num += 1;
 }
