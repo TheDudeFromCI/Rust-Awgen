@@ -47,6 +47,16 @@ impl Default for MouseController {
 }
 
 
+/// A marker that indicates that the output of a mouse controller rotation
+/// should be applied to a camera's transform.
+#[derive(Reflect, Component, Default)]
+#[reflect(Component)]
+pub struct CameraController {
+    /// The camera entity to apply the rotation transform to.
+    pub camera: Option<Entity>,
+}
+
+
 /// A system that is triggered every physics frame in order to update the
 /// velocity source of a WASD-controlled entity.
 pub fn wasd_velocity_input(
@@ -73,9 +83,8 @@ pub fn wasd_velocity_input(
         }
 
         if source.force.length_squared() > 0.0 {
-            source.force = controller.quat() * source.force;
-            source.force.y = 0.0;
-            source.force = source.force.normalize();
+            source.force = controller.quat() * source.force * Vec3::new(1.0, 0.0, 1.0);
+            source.force = source.force.normalize() * 0.1;
         }
     }
 }
@@ -121,6 +130,21 @@ pub fn toggle_cursor(
 
             window.set_cursor_lock_mode(camera.locked);
             window.set_cursor_visibility(!camera.locked);
+        }
+    }
+}
+
+
+/// Applies a rotation transformation to a camera based on the rotational value
+/// provided from a mouse controller.
+pub fn apply_camera_transform(
+    query: Query<(&MouseController, &CameraController)>,
+    mut camera_list: Query<&mut Transform>,
+) {
+    for (mouse, cam_target) in query.iter() {
+        if let Some(cam_entity) = cam_target.camera {
+            let mut transform = camera_list.get_mut(cam_entity).unwrap();
+            transform.rotation = mouse.quat();
         }
     }
 }

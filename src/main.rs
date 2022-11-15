@@ -7,7 +7,7 @@
 #![warn(rustdoc::invalid_html_tags)]
 
 
-// mod prefabs;
+mod prefabs;
 
 use awgen_client::ClientPlugin;
 use awgen_network::NetworkPlugin;
@@ -18,22 +18,38 @@ use clap::{Parser, Subcommand};
 use std::panic;
 
 
+/// The default window title for the Awgen game engine.
+const WINDOW_TITLE: &str = "Awgen";
+
+
+/// The default background clear color.
+const CLEAR_COLOR: Color = Color::rgb(0.2, 0.2, 0.2);
+
+
+/// The number of physics frames to calculate per second.
+const TICKRATE: f32 = 25.0;
+
+
+/// The maximum of clients that can connect to a server at once.
+const MAX_CLIENTS: usize = 128;
+
+
 /// The command line input argument structure.
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    /// Enable debug mode
+    #[arg(long)]
+    debug: bool,
+
     /// Type of network application to launch.
     #[command(subcommand)]
     network_command: NetworkCommand,
-
-    /// Enable debug mode
-    #[arg(short, long)]
-    debug: bool,
 }
 
 
 /// The command line input argument subcommand structure.
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 enum NetworkCommand {
     /// Launch a new Awgen client instance and joins a server.
     Client {
@@ -87,15 +103,28 @@ fn main() {
 
 /// Launches a new Awgen client instance.
 fn launch_client(ip: String, port: u16, debug: bool) {
+    let window_title = match debug {
+        true => WINDOW_TITLE.to_string(),
+        false => format!("{WINDOW_TITLE} [Debug]"),
+    };
+
     let client = match debug {
         true => ClientPlugin::debug(),
         false => ClientPlugin::default(),
     };
 
     App::new()
-        .add_plugin(client)
-        .add_plugin(PhysicsPlugin::new(20.0))
+        .insert_resource(ClearColor(CLEAR_COLOR))
+        .insert_resource(WindowDescriptor {
+            title: window_title,
+            ..default()
+        })
+        .add_plugins(DefaultPlugins)
+        .add_plugin(PhysicsPlugin::new(TICKRATE))
         .add_plugin(NetworkPlugin::new_client(ip, port))
+        .add_plugin(client)
+        .add_startup_system(prefabs::spawn_basic_scene)
+        .add_startup_system(prefabs::spawn_player)
         .run();
 }
 
@@ -103,8 +132,9 @@ fn launch_client(ip: String, port: u16, debug: bool) {
 /// Launches a new Awgen server instance.
 fn launch_server(port: u16) {
     App::new()
+        .add_plugins(MinimalPlugins)
+        .add_plugin(PhysicsPlugin::new(TICKRATE))
+        .add_plugin(NetworkPlugin::new_server(port, MAX_CLIENTS))
         .add_plugin(ServerPlugin::default())
-        .add_plugin(PhysicsPlugin::new(20.0))
-        .add_plugin(NetworkPlugin::new_server(port, 128))
         .run();
 }

@@ -2,9 +2,8 @@
 //! structures.
 
 
-use crate::components::{
-    CopyFromLookDir, FirstPersonController, LookDirection, MovementInput, MovementSpeed, WasdController
-};
+use awgen_client::prelude::{CameraController, MouseController, WasdController};
+use awgen_physics::InterpolatedRigidBodyBundle;
 use bevy::prelude::*;
 
 
@@ -14,7 +13,7 @@ pub fn spawn_player(mut commands: Commands) {
         .spawn()
         .insert(Name::new("Camera"))
         .insert_bundle(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 1.0, 0.0),
+            transform: Transform::from_xyz(0.0, 1.85, 0.0),
             ..default()
         })
         .id();
@@ -22,15 +21,13 @@ pub fn spawn_player(mut commands: Commands) {
     let player = commands
         .spawn()
         .insert(Name::new("Player"))
-        .insert(Transform::default())
-        .insert(GlobalTransform::default())
-        .insert(LookDirection::default())
-        .insert(MovementSpeed::default())
-        .insert(MovementInput::from_look())
-        .insert(FirstPersonController::default())
+        .insert_bundle(InterpolatedRigidBodyBundle::default())
         .insert(WasdController::default())
+        .insert(MouseController::default())
         .add_child(camera)
         .id();
 
-    commands.get_or_spawn(camera).insert(CopyFromLookDir::from(player));
+    commands.entity(player).insert(CameraController {
+        camera: Some(camera),
+    });
 }

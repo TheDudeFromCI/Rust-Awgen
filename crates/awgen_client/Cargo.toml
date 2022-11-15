@@ -14,6 +14,5 @@ categories = ["games", "game-engines"]
 [dependencies]
 bevy = "0.8.1"
 bevy-inspector-egui = "0.13.0"
-iyes_loopless = "0.8.0"
 awgen_physics = { path = "../awgen_physics", version = "0.1.0" }
 num = "0.4.0"
