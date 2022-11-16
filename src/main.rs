@@ -81,16 +81,18 @@ fn main() {
             ip,
             port,
         } => launch_client(ip, port, debug),
+
         NetworkCommand::Server {
             port,
-        } => launch_server(port),
+        } => launch_server(port, debug),
+
         NetworkCommand::Localhost => {
             let port = 3000;
             let ip = "127.0.0.1".to_string();
 
             let server_thread = std::thread::Builder::new()
                 .name("Server".to_string())
-                .spawn(move || launch_server(port))
+                .spawn(move || launch_server(port, debug))
                 .unwrap();
 
             let client_panic = panic::catch_unwind(move || launch_client(ip, port, debug));
@@ -130,11 +132,16 @@ fn launch_client(ip: String, port: u16, debug: bool) {
 
 
 /// Launches a new Awgen server instance.
-fn launch_server(port: u16) {
+fn launch_server(port: u16, debug: bool) {
+    let server = match debug {
+        true => ServerPlugin::debug(),
+        false => ServerPlugin::default(),
+    };
+
     App::new()
         .add_plugins(MinimalPlugins)
         .add_plugin(PhysicsPlugin::new(TICKRATE))
         .add_plugin(NetworkPlugin::new_server(port, MAX_CLIENTS))
-        .add_plugin(ServerPlugin::default())
+        .add_plugin(server)
         .run();
 }

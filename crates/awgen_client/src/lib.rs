@@ -17,6 +17,7 @@ pub mod prelude {
 }
 
 
+use bevy::ecs::schedule::ReportExecutionOrderAmbiguities;
 use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use prelude::*;
@@ -50,15 +51,16 @@ impl ClientPlugin {
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         if self.is_debug() {
-            app.add_plugin(WorldInspectorPlugin::new());
+            app.insert_resource(ReportExecutionOrderAmbiguities)
+                .add_plugin(WorldInspectorPlugin::new());
         }
 
         app.register_type::<WasdController>()
             .register_type::<MouseController>()
             .register_type::<CameraController>()
-            .add_system(wasd_velocity_input)
-            .add_system(mouse_rotation_input)
-            .add_system(toggle_cursor)
+            .add_system(wasd_velocity_input.in_ambiguity_set("player_controls"))
+            .add_system(mouse_rotation_input.in_ambiguity_set("player_controls"))
+            .add_system(toggle_cursor.in_ambiguity_set("player_controls"))
             .add_system(apply_camera_transform.after(mouse_rotation_input));
     }
 }

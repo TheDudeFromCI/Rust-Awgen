@@ -13,15 +13,38 @@ pub mod prelude {
 }
 
 
+use bevy::ecs::schedule::ReportExecutionOrderAmbiguities;
 use bevy::prelude::*;
 
 
 /// The Awgen server plugin implementation.
-#[derive(Default)]
-pub struct ServerPlugin;
+#[derive(Debug, Clone, Default)]
+pub struct ServerPlugin {
+    /// Whether or not this plugin is loaded in debug mode.
+    debug: bool,
+}
+
+impl ServerPlugin {
+    /// Creates a new server plugin instance in debug mode.
+    pub fn debug() -> Self {
+        Self {
+            debug: true,
+        }
+    }
+
+
+    /// Gets whether or not this server is loaded in debug mode.
+    pub fn is_debug(&self) -> bool {
+        self.debug
+    }
+}
 
 impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
+        if self.is_debug() {
+            app.insert_resource(ReportExecutionOrderAmbiguities);
+        }
+
         app.add_plugins(MinimalPlugins);
     }
 }
