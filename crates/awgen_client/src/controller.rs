@@ -65,7 +65,10 @@ pub fn wasd_velocity_input(
     mut query: Query<(&mut VelocitySource, &MouseController), With<WasdController>>,
 ) {
     for (mut source, controller) in query.iter_mut() {
+        let movement_speed = 0.1;
+
         source.force = Vec3::ZERO;
+        let mut vert_speed = Vec3::ZERO;
 
         if keyboard.pressed(KeyCode::W) {
             source.force += Vec3::NEG_Z;
@@ -83,9 +86,21 @@ pub fn wasd_velocity_input(
             source.force += Vec3::X;
         }
 
+        if keyboard.pressed(KeyCode::Space) {
+            vert_speed += Vec3::Y;
+        }
+
+        if keyboard.pressed(KeyCode::LShift) {
+            vert_speed += Vec3::NEG_Y;
+        }
+
         if source.force.length_squared() > 0.0 {
             source.force = controller.quat() * source.force * Vec3::new(1.0, 0.0, 1.0);
-            source.force = source.force.normalize() * 0.1;
+            source.force = source.force.normalize() * movement_speed;
+        }
+
+        if vert_speed.length_squared() > 0.0 {
+            source.force += vert_speed * movement_speed;
         }
     }
 }
