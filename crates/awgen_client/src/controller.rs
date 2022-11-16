@@ -4,19 +4,20 @@
 use awgen_physics::prelude::VelocitySource;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
+use bevy::window::CursorGrabMode;
 use std::f32::consts::PI;
 
 
 /// A component marker that allows for an entity to supply a velocity force
 /// based off of WASD input controls.
-#[derive(Reflect, Component, Default)]
+#[derive(Debug, Clone, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct WasdController;
 
 
 /// A component that reads a continuous euler rotation based off of mouse
 /// movement inputs.
-#[derive(Reflect, Component)]
+#[derive(Debug, Clone, Reflect, Component)]
 #[reflect(Component)]
 pub struct MouseController {
     /// The mouse sensitivity of this camera controller.
@@ -49,7 +50,7 @@ impl Default for MouseController {
 
 /// A marker that indicates that the output of a mouse controller rotation
 /// should be applied to a camera's transform.
-#[derive(Reflect, Component, Default)]
+#[derive(Debug, Clone, Reflect, Component, Default)]
 #[reflect(Component)]
 pub struct CameraController {
     /// The camera entity to apply the rotation transform to.
@@ -128,7 +129,12 @@ pub fn toggle_cursor(
         if input.just_pressed(KeyCode::F11) {
             camera.locked = !camera.locked;
 
-            window.set_cursor_lock_mode(camera.locked);
+            let grab_mode = match camera.locked {
+                true => CursorGrabMode::Confined,
+                false => CursorGrabMode::None,
+            };
+
+            window.set_cursor_grab_mode(grab_mode);
             window.set_cursor_visibility(!camera.locked);
         }
     }

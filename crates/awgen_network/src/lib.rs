@@ -97,7 +97,7 @@ impl Plugin for NetworkPlugin {
                 port,
                 max_clients,
             } => {
-                app.add_plugin(RenetServerPlugin)
+                app.add_plugin(RenetServerPlugin::default())
                     .insert_resource(build_server(*port, *max_clients))
                     .register_type::<ClientSocket>()
                     .add_event::<ClientConnectedEvent>()
@@ -107,7 +107,10 @@ impl Plugin for NetworkPlugin {
             NetworkSide::Client {
                 ip,
                 port,
-            } => app.add_plugin(RenetClientPlugin).insert_resource(build_client(ip, *port)),
+            } => {
+                app.add_plugin(RenetClientPlugin::default())
+                    .insert_resource(build_client(ip, *port))
+            },
         };
     }
 }
@@ -138,5 +141,5 @@ fn build_client(ip: &str, port: u16) -> RenetClient {
         server_addr,
         user_data: None,
     };
-    RenetClient::new(time, socket, client_id, connection_config, auth).unwrap()
+    RenetClient::new(time, socket, connection_config, auth).unwrap()
 }

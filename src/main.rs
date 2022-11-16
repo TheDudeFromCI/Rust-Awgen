@@ -13,6 +13,7 @@ use awgen_client::ClientPlugin;
 use awgen_network::NetworkPlugin;
 use awgen_physics::PhysicsPlugin;
 use awgen_server::ServerPlugin;
+use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use clap::{Parser, Subcommand};
 use std::panic;
@@ -117,11 +118,18 @@ fn launch_client(ip: String, port: u16, debug: bool) {
 
     App::new()
         .insert_resource(ClearColor(CLEAR_COLOR))
-        .insert_resource(WindowDescriptor {
-            title: window_title,
-            ..default()
-        })
-        .add_plugins(DefaultPlugins)
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    window: WindowDescriptor {
+                        title: window_title,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .set(log_plugin(debug))
+                .set(ImagePlugin::default_nearest()),
+        )
         .add_plugin(PhysicsPlugin::new(TICKRATE))
         .add_plugin(NetworkPlugin::new_client(ip, port))
         .add_plugin(client)
@@ -140,8 +148,29 @@ fn launch_server(port: u16, debug: bool) {
 
     App::new()
         .add_plugins(MinimalPlugins)
+        .add_plugin(log_plugin(debug))
         .add_plugin(PhysicsPlugin::new(TICKRATE))
         .add_plugin(NetworkPlugin::new_server(port, MAX_CLIENTS))
         .add_plugin(server)
         .run();
+}
+
+
+/// Configures the logging plugin based on whether the application is launched
+/// in debug mode or not.
+fn log_plugin(debug: bool) -> LogPlugin {
+    match debug {
+        true => {
+            LogPlugin {
+                level:  Level::DEBUG,
+                filter: "info,wgpu=error,awgen=debug".to_string(),
+            }
+        },
+        false => {
+            LogPlugin {
+                level:  Level::INFO,
+                filter: "info,wgpu=error".to_string(),
+            }
+        },
+    }
 }

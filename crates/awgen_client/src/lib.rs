@@ -58,9 +58,9 @@ impl Plugin for ClientPlugin {
         app.register_type::<WasdController>()
             .register_type::<MouseController>()
             .register_type::<CameraController>()
-            .add_system(wasd_velocity_input.in_ambiguity_set("player_controls"))
-            .add_system(mouse_rotation_input.in_ambiguity_set("player_controls"))
-            .add_system(toggle_cursor.in_ambiguity_set("player_controls"))
+            .add_system(wasd_velocity_input)
+            .add_system(mouse_rotation_input.ambiguous_with(wasd_velocity_input))
+            .add_system(toggle_cursor.ambiguous_with(mouse_rotation_input))
             .add_system(apply_camera_transform.after(mouse_rotation_input));
     }
 }

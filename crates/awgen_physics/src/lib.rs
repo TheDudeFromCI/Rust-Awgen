@@ -19,9 +19,8 @@ pub mod prelude {
 }
 
 use bevy::prelude::*;
-use iyes_loopless::prelude::*;
+use bevy::time::FixedTimestep;
 use prelude::*;
-use std::time::Duration;
 
 
 /// The implementation of the Awgen physics plugin. Handles collision, physics
@@ -42,7 +41,7 @@ impl PhysicsPlugin {
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
-        let frame_nanos = ((1.0f64 / self.tickrate as f64) * 1_000_000_000.0f64) as u64;
+        let timestep = 1.0 / self.tickrate as f64;
 
         app.register_type::<Position>()
             .register_type::<PreviousPosition>()
@@ -50,25 +49,28 @@ impl Plugin for PhysicsPlugin {
             .register_type::<Movable>()
             .insert_resource(PhysicsTickrate::new(self.tickrate))
             .insert_resource(PhysicsFrame::default())
-            .add_fixed_timestep_before_stage(
+            .add_stage_before(
                 CoreStage::Update,
-                Duration::from_nanos(frame_nanos),
                 "pre_tick",
+                SystemStage::parallel()
+                    .with_run_criteria(FixedTimestep::step(timestep))
+                    .with_system(push_position_stack)
+                    .with_system(prepare_physics_render_frame),
             )
-            .add_fixed_timestep_system("pre_tick", 0, push_position_stack)
-            .add_fixed_timestep_system("pre_tick", 0, prepare_physics_render_frame)
-            .add_fixed_timestep(Duration::from_nanos(frame_nanos), "tick")
-            .add_fixed_timestep_after_stage(
-                CoreStage::Update,
-                Duration::from_nanos(frame_nanos),
+            .add_stage_after(
+                "pre_tick",
+                "tick",
+                SystemStage::parallel().with_run_criteria(FixedTimestep::step(timestep)),
+            )
+            .add_stage_after(
+                "tick",
                 "post_tick",
+                SystemStage::parallel()
+                    .with_run_criteria(FixedTimestep::step(timestep))
+                    .with_system(apply_velocity),
             )
-            .add_fixed_timestep_system("post_tick", 0, apply_velocity)
-            .add_system_to_stage(CoreStage::PostUpdate, update_physics_render_frame)
-            .add_system_to_stage(
-                CoreStage::PostUpdate,
-                update_render_position.after(update_physics_render_frame),
-            );
+            .add_system(update_physics_render_frame)
+            .add_system(update_render_position.after(update_physics_render_frame));
     }
 }
 
@@ -94,7 +96,6 @@ pub struct RigidBodyBundle {
 #[derive(Bundle, Default)]
 pub struct InterpolatedRigidBodyBundle {
     /// The current position of the rigid body.
-    #[bundle]
     rigid_body: RigidBodyBundle,
 
     /// The position of the rigid body on the previous frame.

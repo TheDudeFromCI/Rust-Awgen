@@ -12,6 +12,5 @@ keywords = ["game", "game engine", "sandbox", "graphics"]
 categories = ["games", "game-engines"]
 
 [dependencies]
-bevy = "0.8.1"
-bevy_renet = "0.0.5"
-iyes_loopless = "0.8.0"
+bevy = "0.9.0"
+bevy_renet = { git = "https://github.com/Alainx277/renet.git", branch = "bevy-0.9" }

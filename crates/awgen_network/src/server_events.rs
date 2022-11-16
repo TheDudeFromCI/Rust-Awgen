@@ -53,7 +53,7 @@ pub fn server_socket_event(
     for event in events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
-                let entity = commands.spawn().insert(ClientSocket::new(*id)).id();
+                let entity = commands.spawn(ClientSocket::new(*id)).id();
                 ev_connected.send(ClientConnectedEvent(entity));
             },
             ServerEvent::ClientDisconnected(id) => {

@@ -11,7 +11,7 @@ pub fn spawn_basic_scene(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // plane
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane {
             size: 5.0,
         })),
@@ -19,7 +19,7 @@ pub fn spawn_basic_scene(
         ..default()
     });
     // cube
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube {
             size: 1.0,
         })),
@@ -28,7 +28,7 @@ pub fn spawn_basic_scene(
         ..default()
     });
     // light
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 1500.0,
             shadows_enabled: true,

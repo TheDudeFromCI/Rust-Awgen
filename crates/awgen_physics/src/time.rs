@@ -6,13 +6,13 @@ use bevy::prelude::*;
 
 
 /// The number of physics frames that are calculated per second.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Resource)]
 pub struct PhysicsTickrate {
     /// The number of frames per second.
     rate: f32,
 
     /// The delta time between physics frames, measured in seconds.
-    delta: f64,
+    delta: f32,
 }
 
 impl PhysicsTickrate {
@@ -21,7 +21,7 @@ impl PhysicsTickrate {
     pub fn new(rate: f32) -> Self {
         Self {
             rate,
-            delta: 1.0 / rate as f64,
+            delta: 1.0 / rate,
         }
     }
 
@@ -33,18 +33,24 @@ impl PhysicsTickrate {
 
 
     /// Gets the delta time, in seconds, between physics frames.
-    pub fn delta(&self) -> f64 {
+    pub fn delta(&self) -> f32 {
         self.delta
+    }
+}
+
+impl Default for PhysicsTickrate {
+    fn default() -> Self {
+        PhysicsTickrate::new(20.0)
     }
 }
 
 
 /// A time keeping unit that measures the physics frame time delta for physics
 /// rendering interpolation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Resource)]
 pub struct PhysicsFrame {
     /// The total system time, in seconds, of the last real physics frame.
-    last_frame: f64,
+    last_frame: f32,
 
     /// The delta percentage between the last physics frame and the next physics
     /// frame.
@@ -58,7 +64,7 @@ pub struct PhysicsFrame {
 impl PhysicsFrame {
     /// Gets the total time, in seconds, of the last physics frame since the
     /// runtime was started.
-    pub fn last_frame(&self) -> f64 {
+    pub fn last_frame(&self) -> f32 {
         self.last_frame
     }
 
@@ -87,7 +93,7 @@ pub fn update_physics_render_frame(
     tickrate: Res<PhysicsTickrate>,
     mut physics: ResMut<PhysicsFrame>,
 ) {
-    let cur_frame = time.seconds_since_startup();
+    let cur_frame = time.elapsed_seconds();
     let progress = (cur_frame - physics.last_frame) / tickrate.delta();
     physics.delta = num::clamp(progress as f32, 0.0, 1.0);
 }
@@ -96,6 +102,6 @@ pub fn update_physics_render_frame(
 /// Called at the beginning of a physics frame to prepare the timing for
 /// calculating physics render frames.
 pub fn prepare_physics_render_frame(time: Res<Time>, mut frame: ResMut<PhysicsFrame>) {
-    frame.last_frame = time.seconds_since_startup();
+    frame.last_frame = time.elapsed_seconds();
     frame.frame_num += 1;
 }
