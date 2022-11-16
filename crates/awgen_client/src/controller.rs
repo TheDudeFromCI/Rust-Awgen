@@ -2,6 +2,7 @@
 
 
 use awgen_physics::prelude::VelocitySource;
+use awgen_physics::time::PhysicsTickrate;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
@@ -62,10 +63,11 @@ pub struct CameraController {
 /// velocity source of a WASD-controlled entity.
 pub fn wasd_velocity_input(
     keyboard: Res<Input<KeyCode>>,
+    tickrate: Res<PhysicsTickrate>,
     mut query: Query<(&mut VelocitySource, &MouseController), With<WasdController>>,
 ) {
     for (mut source, controller) in query.iter_mut() {
-        let movement_speed = 0.1;
+        let movement_speed = 2.5 * tickrate.delta();
 
         source.force = Vec3::ZERO;
         let mut vert_speed = Vec3::ZERO;
