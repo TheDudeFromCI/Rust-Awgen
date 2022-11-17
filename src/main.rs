@@ -82,77 +82,85 @@ fn main() {
             ip,
             port,
         } => launch_client(ip, port, debug),
-
         NetworkCommand::Server {
             port,
         } => launch_server(port, debug),
-
-        NetworkCommand::Localhost => {
-            let port = 3000;
-            let ip = "127.0.0.1".to_string();
-
-            let server_thread = std::thread::Builder::new()
-                .name("Server".to_string())
-                .spawn(move || launch_server(port, debug))
-                .unwrap();
-
-            let client_panic = panic::catch_unwind(move || launch_client(ip, port, debug));
-            let server_panic = server_thread.join();
-            client_panic.and(server_panic).unwrap();
-        },
+        NetworkCommand::Localhost => launch_localhost(debug),
     }
+}
+
+
+/// Launches a new localhost Awgen server and a client instance that connects to
+/// it.
+fn launch_localhost(debug: bool) {
+    let port = 30082;
+    let ip = "127.0.0.1".to_string();
+
+    let server_thread = std::thread::Builder::new()
+        .name("Server".to_string())
+        .spawn(move || launch_server(port, debug))
+        .unwrap();
+
+    launch_client(ip, port, debug);
+    server_thread.join().unwrap();
 }
 
 
 /// Launches a new Awgen client instance.
 fn launch_client(ip: String, port: u16, debug: bool) {
-    let window_title = match debug {
-        true => WINDOW_TITLE.to_string(),
-        false => format!("{WINDOW_TITLE} [Debug]"),
-    };
+    panic::catch_unwind(move || {
+        let window_title = match debug {
+            true => WINDOW_TITLE.to_string(),
+            false => format!("{WINDOW_TITLE} [Debug]"),
+        };
 
-    let client = match debug {
-        true => ClientPlugin::debug(),
-        false => ClientPlugin::default(),
-    };
+        let client = match debug {
+            true => ClientPlugin::debug(),
+            false => ClientPlugin::default(),
+        };
 
-    App::new()
-        .insert_resource(ClearColor(CLEAR_COLOR))
-        .add_plugins(
-            DefaultPlugins
-                .set(WindowPlugin {
-                    window: WindowDescriptor {
-                        title: window_title,
+        App::new()
+            .insert_resource(ClearColor(CLEAR_COLOR))
+            .add_plugins(
+                DefaultPlugins
+                    .set(WindowPlugin {
+                        window: WindowDescriptor {
+                            title: window_title,
+                            ..default()
+                        },
                         ..default()
-                    },
-                    ..default()
-                })
-                .set(log_plugin(debug))
-                .set(ImagePlugin::default_nearest()),
-        )
-        .add_plugin(PhysicsPlugin::new(TICKRATE))
-        .add_plugin(NetworkPlugin::new_client(ip, port))
-        .add_plugin(client)
-        .add_startup_system(prefabs::spawn_basic_scene)
-        .add_startup_system(prefabs::spawn_player)
-        .run();
+                    })
+                    .set(log_plugin(debug))
+                    .set(ImagePlugin::default_nearest()),
+            )
+            .add_plugin(PhysicsPlugin::new(TICKRATE))
+            .add_plugin(NetworkPlugin::new_client(ip, port))
+            .add_plugin(client)
+            .add_startup_system(prefabs::spawn_basic_scene)
+            .add_startup_system(prefabs::spawn_player)
+            .run();
+    })
+    .expect("An internal error has occurred in the Awgen client thread.");
 }
 
 
 /// Launches a new Awgen server instance.
 fn launch_server(port: u16, debug: bool) {
-    let server = match debug {
-        true => ServerPlugin::debug(),
-        false => ServerPlugin::default(),
-    };
+    panic::catch_unwind(move || {
+        let server = match debug {
+            true => ServerPlugin::debug(),
+            false => ServerPlugin::default(),
+        };
 
-    App::new()
-        .add_plugins(MinimalPlugins)
-        .add_plugin(log_plugin(debug))
-        .add_plugin(PhysicsPlugin::new(TICKRATE))
-        .add_plugin(NetworkPlugin::new_server(port, MAX_CLIENTS))
-        .add_plugin(server)
-        .run();
+        App::new()
+            .add_plugins(MinimalPlugins)
+            .add_plugin(log_plugin(debug))
+            .add_plugin(PhysicsPlugin::new(TICKRATE))
+            .add_plugin(NetworkPlugin::new_server(port, MAX_CLIENTS))
+            .add_plugin(server)
+            .run();
+    })
+    .expect("An internal error has occurred in the Awgen server thread.");
 }
 
 
