@@ -95,7 +95,7 @@ pub fn update_physics_render_frame(
 ) {
     let cur_frame = time.elapsed_seconds();
     let progress = (cur_frame - physics.last_frame) / tickrate.delta();
-    physics.delta = num::clamp(progress as f32, 0.0, 1.0);
+    physics.delta = num::clamp(progress, 0.0, 1.0);
 }
 
 
