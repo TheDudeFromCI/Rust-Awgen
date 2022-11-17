@@ -6,7 +6,7 @@ build: clean docs
 
 test:
 	@echo Testing all project files
-	cargo test --all-targets --features bevy/dynamic
+	cargo test --workspace --all-targets --features bevy/dynamic
 
 run:
 	@echo Compiling and running development build
