@@ -13,6 +13,7 @@ use awgen_client::ClientPlugin;
 use awgen_network::NetworkPlugin;
 use awgen_physics::PhysicsPlugin;
 use awgen_server::ServerPlugin;
+use awgen_world::WorldDataPlugin;
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use clap::{Parser, Subcommand};
@@ -33,6 +34,17 @@ const TICKRATE: f32 = 25.0;
 
 /// The maximum of clients that can connect to a server at once.
 const MAX_CLIENTS: usize = 128;
+
+
+/// The error string format for the Awgen server and client threads.
+macro_rules! print_error {
+    ( $msg:expr, $err:expr ) => {
+        println!(
+            "\n===== {{ ERROR }} =====\n{0}\nError: {1:?}\n=====================\n",
+            $msg, $err
+        );
+    };
+}
 
 
 /// The command line input argument structure.
@@ -108,7 +120,7 @@ fn launch_localhost(debug: bool) {
 
 /// Launches a new Awgen client instance.
 fn launch_client(ip: String, port: u16, debug: bool) {
-    panic::catch_unwind(move || {
+    let result = panic::catch_unwind(move || {
         let window_title = match debug {
             true => WINDOW_TITLE.to_string(),
             false => format!("{WINDOW_TITLE} [Debug]"),
@@ -130,23 +142,30 @@ fn launch_client(ip: String, port: u16, debug: bool) {
                         },
                         ..default()
                     })
-                    .set(log_plugin(debug))
+                    .set(LogPlugin {
+                        level: Level::WARN,
+                        ..default()
+                    })
                     .set(ImagePlugin::default_nearest()),
             )
             .add_plugin(PhysicsPlugin::new(TICKRATE))
             .add_plugin(NetworkPlugin::new_client(ip, port))
+            .add_plugin(WorldDataPlugin::default())
             .add_plugin(client)
             .add_startup_system(prefabs::spawn_basic_scene)
             .add_startup_system(prefabs::spawn_player)
             .run();
-    })
-    .expect("An internal error has occurred in the Awgen client thread.");
+    });
+
+    if let Err(err) = result {
+        print_error!("An internal error has occurred in the Awgen client.", err);
+    }
 }
 
 
 /// Launches a new Awgen server instance.
 fn launch_server(port: u16, debug: bool) {
-    panic::catch_unwind(move || {
+    let result = panic::catch_unwind(move || {
         let server = match debug {
             true => ServerPlugin::debug(),
             false => ServerPlugin::default(),
@@ -154,31 +173,14 @@ fn launch_server(port: u16, debug: bool) {
 
         App::new()
             .add_plugins(MinimalPlugins)
-            .add_plugin(log_plugin(debug))
             .add_plugin(PhysicsPlugin::new(TICKRATE))
             .add_plugin(NetworkPlugin::new_server(port, MAX_CLIENTS))
+            .add_plugin(WorldDataPlugin::default())
             .add_plugin(server)
             .run();
-    })
-    .expect("An internal error has occurred in the Awgen server thread.");
-}
+    });
 
-
-/// Configures the logging plugin based on whether the application is launched
-/// in debug mode or not.
-fn log_plugin(debug: bool) -> LogPlugin {
-    match debug {
-        true => {
-            LogPlugin {
-                level:  Level::DEBUG,
-                filter: "info,wgpu=error,awgen=debug".to_string(),
-            }
-        },
-        false => {
-            LogPlugin {
-                level:  Level::INFO,
-                filter: "info,wgpu=error".to_string(),
-            }
-        },
+    if let Err(err) = result {
+        print_error!("An internal error has occurred in the Awgen server.", err);
     }
 }

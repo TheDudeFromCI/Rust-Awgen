@@ -44,7 +44,5 @@ impl Plugin for ServerPlugin {
         if self.is_debug() {
             app.insert_resource(ReportExecutionOrderAmbiguities);
         }
-
-        app.add_plugins(MinimalPlugins);
     }
 }

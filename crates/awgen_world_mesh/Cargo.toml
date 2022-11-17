@@ -1,0 +1,15 @@
+[package]
+name = "awgen_world_mesh"
+version = "0.1.0"
+authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
+edition = "2021"
+description = "The voxel world mesh generation handler for Awgen."
+readme = "README.md"
+homepage = "https://github.com/TheDudeFromCI/Awgen"
+repository = "https://github.com/TheDudeFromCI/Awgen"
+license = "Apache-2.0"
+keywords = ["game", "game engine", "sandbox", "graphics"]
+categories = ["games", "game-engines"]
+
+[dependencies]
+bevy = "0.9.0"

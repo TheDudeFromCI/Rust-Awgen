@@ -17,6 +17,8 @@ awgen_client = { path = "crates/awgen_client", version = "0.1.0" }
 awgen_network = { path = "crates/awgen_network", version = "0.1.0" }
 awgen_physics = { path = "crates/awgen_physics", version = "0.1.0" }
 awgen_server = { path = "crates/awgen_server", version = "0.1.0" }
+awgen_world = { path = "crates/awgen_world", version = "0.1.0" }
+awgen_world_mesh = { path = "crates/awgen_world_mesh", version = "0.1.0" }
 clap = { version = "4.0.22", features = ["derive", "wrap_help"] }
 
 [profile.dev]

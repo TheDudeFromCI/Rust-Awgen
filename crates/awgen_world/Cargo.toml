@@ -1,0 +1,17 @@
+[package]
+name = "awgen_world"
+version = "0.1.0"
+authors = ["TheDudeFromCI <thedudefromci@gmail.com>"]
+edition = "2021"
+description = "The voxel world data structure for Awgen."
+readme = "README.md"
+homepage = "https://github.com/TheDudeFromCI/Awgen"
+repository = "https://github.com/TheDudeFromCI/Awgen"
+license = "Apache-2.0"
+keywords = ["game", "game engine", "sandbox", "graphics"]
+categories = ["games", "game-engines"]
+
+[dependencies]
+anyhow = "1.0.66"
+arrayvec = "0.7.2"
+bevy = "0.9.0"
