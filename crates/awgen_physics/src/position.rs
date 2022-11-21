@@ -8,7 +8,7 @@ use bevy::prelude::*;
 
 /// The absolute position of an entity on a physics frame.
 #[derive(Debug, Clone, Reflect, Component)]
-// #[reflect(Component)]
+#[reflect(Component)]
 pub struct Position {
     /// The translation value of the entity within the world, measured in
     /// meters.
