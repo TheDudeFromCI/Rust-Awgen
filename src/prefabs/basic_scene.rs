@@ -1,6 +1,9 @@
 //! A temporary example scene.
 
 
+use awgen_math::region::Region;
+use awgen_world::world::VoxelWorld;
+use awgen_world_mesh::prelude::{generate_chunk_mesh, BlockShape};
 use bevy::prelude::*;
 
 
@@ -10,23 +13,6 @@ pub fn spawn_basic_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane {
-            size: 5.0,
-        })),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..default()
-    });
-    // cube
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube {
-            size: 1.0,
-        })),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    });
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
@@ -34,7 +20,19 @@ pub fn spawn_basic_scene(
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        transform: Transform::from_xyz(4.0, 10.0, 4.0),
+        ..default()
+    });
+
+    let mut voxel_world = VoxelWorld::<BlockShape>::default();
+    for pos in Region::from_points(IVec3::new(0, 0, 0), IVec3::new(15, 0, 15)).iter() {
+        voxel_world.set_block_data(pos, BlockShape::Cube);
+    }
+
+    let mesh = generate_chunk_mesh(IVec3::ZERO, voxel_world);
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(mesh),
+        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
     });
 }

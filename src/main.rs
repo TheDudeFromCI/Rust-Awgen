@@ -14,6 +14,7 @@ use awgen_network::NetworkPlugin;
 use awgen_physics::PhysicsPlugin;
 use awgen_server::ServerPlugin;
 use awgen_world::WorldDataPlugin;
+use awgen_world_mesh::WorldMeshPlugin;
 use bevy::log::{Level, LogPlugin};
 use bevy::prelude::*;
 use clap::{Parser, Subcommand};
@@ -151,6 +152,7 @@ fn launch_client(ip: String, port: u16, debug: bool) {
             .add_plugin(PhysicsPlugin::new(TICKRATE))
             .add_plugin(NetworkPlugin::new_client(ip, port))
             .add_plugin(WorldDataPlugin::default())
+            .add_plugin(WorldMeshPlugin::default())
             .add_plugin(client)
             .add_startup_system(prefabs::spawn_basic_scene)
             .add_startup_system(prefabs::spawn_player)
