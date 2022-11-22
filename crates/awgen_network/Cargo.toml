@@ -13,4 +13,4 @@ categories = ["games", "game-engines"]
 
 [dependencies]
 bevy = "0.9.0"
-bevy_renet = { git = "https://github.com/Alainx277/renet.git", branch = "bevy-0.9" }
+bevy_renet = { version = "0.0.6" }
