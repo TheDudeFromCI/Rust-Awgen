@@ -6,7 +6,6 @@
 #![warn(rustdoc::invalid_html_tags)]
 
 
-pub mod iterators;
 pub mod populator;
 pub mod world;
 

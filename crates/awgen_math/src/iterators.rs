@@ -1,6 +1,7 @@
 //! A collection of useful coordinate iterators.
 
 
+use crate::prelude::Region;
 use bevy::prelude::*;
 
 
@@ -19,14 +20,11 @@ pub struct CuboidIterator {
 
 impl CuboidIterator {
     /// Creates a new cuboid iterator from two opposite corner points.
-    pub fn from_points(a: IVec3, b: IVec3) -> Self {
-        let min = a.min(b);
-        let max = a.max(b);
-
+    pub fn from(region: &Region) -> Self {
         Self {
-            min,
-            max,
-            next: Some(min),
+            min:  region.min(),
+            max:  region.max(),
+            next: Some(region.min()),
         }
     }
 }
@@ -77,7 +75,7 @@ mod test {
     fn simple_cuboid() {
         let a = IVec3::new(-1, 0, 3);
         let b = IVec3::new(0, 0, 2);
-        let mut iter = CuboidIterator::from_points(a, b);
+        let mut iter = CuboidIterator::from(&Region::from_points(a, b));
 
         assert_eq!(iter.next(), Some(IVec3::new(-1, 0, 2)));
         assert_eq!(iter.next(), Some(IVec3::new(-1, 0, 3)));

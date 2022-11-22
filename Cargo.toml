@@ -14,6 +14,7 @@ categories = ["games", "game-engines"]
 [dependencies]
 bevy = "0.9.0"
 awgen_client = { path = "crates/awgen_client", version = "0.1.0" }
+awgen_math = { path = "crates/awgen_math", version = "0.1.0" }
 awgen_network = { path = "crates/awgen_network", version = "0.1.0" }
 awgen_physics = { path = "crates/awgen_physics", version = "0.1.0" }
 awgen_server = { path = "crates/awgen_server", version = "0.1.0" }

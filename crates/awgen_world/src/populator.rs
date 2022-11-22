@@ -2,7 +2,7 @@
 //! loading task) and chunk pruning (via chunk unloading).
 
 
-use crate::iterators::CuboidIterator;
+use awgen_math::region::Region;
 use awgen_physics::prelude::Position;
 use bevy::prelude::*;
 
@@ -59,34 +59,34 @@ impl VoxelChunkStates {
     /// Gets the ChunkState for the chunk at the indicated chunk coordinates.
     pub fn get_state(&self, chunk_coords: IVec3) -> ChunkState {
         let region_coords = chunk_coords >> 4;
-        let index = chunk_coords.x * 16 * 16 + chunk_coords.y * 16 + chunk_coords.z;
+        let index = Region::CHUNK.point_to_index(chunk_coords & 15).unwrap();
 
         self.regions
             .iter()
             .find(|r| r.region_coords.eq(&region_coords))
-            .map_or(ChunkState::Unloaded, |r| r.chunks[index as usize])
+            .map_or(ChunkState::Unloaded, |r| r.chunks[index])
     }
 
 
     /// Changes the state of the chunk at the indicates chunk coordinates.
     pub fn set_state(&mut self, chunk_coords: IVec3, state: ChunkState) {
         let region_coords = chunk_coords >> 4;
-        let index = chunk_coords.x * 16 * 16 + chunk_coords.y * 16 + chunk_coords.z;
+        let index = Region::CHUNK.point_to_index(chunk_coords & 15).unwrap();
 
-        if let Some((index, region)) = self
+        if let Some((reg_index, region)) = self
             .regions
             .iter_mut()
             .enumerate()
             .find(|(_, r)| r.region_coords.eq(&region_coords))
         {
-            region.chunks[index as usize] = state;
+            region.chunks[index] = state;
 
             if region.chunks.iter().all(|c| *c == ChunkState::Unloaded) {
-                self.regions.remove(index);
+                self.regions.remove(reg_index);
             }
         } else if state != ChunkState::Unloaded {
             let mut region = VoxelChunkStateRegion::new(region_coords);
-            region.chunks[index as usize] = state;
+            region.chunks[index] = state;
             self.regions.push(region);
         }
     }
@@ -168,8 +168,9 @@ pub fn load_chunks(
             let pos = pos.translation.as_ivec3() >> 4;
             let min = pos - anchor.radius as i32;
             let max = pos + anchor.radius as i32;
+            let region = Region::from_points(min, max);
 
-            for chunk in CuboidIterator::from_points(min, max) {
+            for chunk in region.iter() {
                 let state = world_states.get_state(chunk);
 
                 if state == ChunkState::Unloaded {
@@ -225,7 +226,8 @@ mod test {
 
         let min = IVec3::new(1, -1, -2);
         let max = IVec3::new(3, 1, 0);
-        for pos in CuboidIterator::from_points(min, max) {
+        let region = Region::from_points(min, max);
+        for pos in region.iter() {
             assert_eq!(
                 iter.next(),
                 Some(&LoadChunkEvent {

@@ -5,8 +5,8 @@
 //! easier manipulation of voxel worlds across many chunks.
 
 
-use crate::iterators::CuboidIterator;
 use anyhow::Result;
+use awgen_math::region::Region;
 use bevy::prelude::*;
 
 
@@ -103,38 +103,27 @@ where BlockData: Default + Copy + Send + Sync + 'static
     ///
     /// The region to load is specified by the tuple (IVec3, IVec3), where each
     /// element is one opposite corner of the region, inclusive.
-    pub fn get_block_region(&self, region: (IVec3, IVec3)) -> Vec<BlockData> {
-        let min = region.0.min(region.1);
-        let max = region.0.max(region.1);
-        let size = max - min + 1;
+    pub fn get_block_region(&self, region: Region) -> Vec<BlockData> {
+        let mut data = vec![BlockData::default(); region.count()];
 
-        let block_count = size.x * size.y * size.z;
-        let mut data = vec![BlockData::default(); block_count as usize];
-
-        for chunk_coords in CuboidIterator::from_points(min >> 4, max >> 4) {
+        for chunk_coords in Region::from_points(region.min() >> 4, region.max() >> 4).iter() {
+            let chunk_index = Region::CHUNK.point_to_index(chunk_coords & 15).unwrap();
             let region_coords = chunk_coords >> 4;
-            let chunk_index = (chunk_coords.x & 15) * 16 * 16
-                + (chunk_coords.y & 15) * 16
-                + (chunk_coords.z & 15);
-
             let chunk = self
                 .regions
                 .iter()
                 .find(|r| r.region_coords.eq(&region_coords))
-                .and_then(|r| r.chunks[chunk_index as usize].as_ref());
+                .and_then(|r| r.chunks[chunk_index].as_ref());
 
-            let block_min = min.max(chunk_coords << 4);
-            let block_max = max.min((chunk_coords << 4) + 15);
-
-            for block in CuboidIterator::from_points(block_min, block_max) {
-                let data_pos = block - min;
-                let data_index = data_pos.x * size.y * size.z + data_pos.y * size.z + data_pos.z;
-
-                if let Some(chunk) = chunk {
-                    let index = (block.x & 15) * 16 * 16 + (block.y & 15) * 16 + (block.z & 15);
-                    data[data_index as usize] = chunk.blocks[index as usize];
-                } else {
-                    data[data_index as usize] = BlockData::default();
+            let block_region = Region::from_size(chunk_coords << 4, IVec3::new(16, 16, 16));
+            for block in block_region.iter() {
+                if let Ok(data_index) = region.point_to_index(block) {
+                    if let Some(chunk) = chunk {
+                        let index = block_region.point_to_index(block).unwrap();
+                        data[data_index] = chunk.blocks[index];
+                    } else {
+                        data[data_index] = BlockData::default();
+                    }
                 }
             }
         }
@@ -150,24 +139,20 @@ where BlockData: Default + Copy + Send + Sync + 'static
     /// is written to it.
     pub fn set_block_data(&mut self, block_pos: IVec3, data: BlockData) {
         let region_coords = block_pos >> 8;
-
-        let chunk_coords: IVec3 = (block_pos >> 4) & 15;
-        let chunk_index = chunk_coords.x * 16 * 16 + chunk_coords.y * 16 + chunk_coords.z;
-
-        let block_coords = block_pos & 15;
-        let block_index = block_coords.x * 16 * 16 + block_coords.y * 16 + block_coords.z;
+        let chunk_index = Region::CHUNK.point_to_index((block_pos >> 4) & 15).unwrap();
+        let block_index = Region::CHUNK.point_to_index(block_pos & 15).unwrap();
 
         for region in &mut self.regions {
             if !region.region_coords.eq(&region_coords) {
                 continue;
             }
 
-            if let Some(chunk) = &mut region.chunks[chunk_index as usize] {
-                chunk.blocks[block_index as usize] = data;
+            if let Some(chunk) = &mut region.chunks[chunk_index] {
+                chunk.blocks[block_index] = data;
             } else {
                 let mut chunk = VoxelChunk::<BlockData>::default();
-                chunk.blocks[block_index as usize] = data;
-                region.chunks[chunk_index as usize] = Some(chunk);
+                chunk.blocks[block_index] = data;
+                region.chunks[chunk_index] = Some(chunk);
             }
 
             return;
@@ -175,8 +160,8 @@ where BlockData: Default + Copy + Send + Sync + 'static
 
         let mut region = VoxelRegion::<BlockData>::new(region_coords);
         let mut chunk = VoxelChunk::<BlockData>::default();
-        chunk.blocks[block_index as usize] = data;
-        region.chunks[chunk_index as usize] = Some(chunk);
+        chunk.blocks[block_index] = data;
+        region.chunks[chunk_index] = Some(chunk);
         self.regions.push(region);
     }
 }
@@ -206,7 +191,7 @@ mod test {
         world.set_block_data(IVec3::new(-1, 11, 4), 3);
         world.set_block_data(IVec3::new(-1, 11, 5), 3);
 
-        let region = (IVec3::new(-3, 12, 2), IVec3::new(0, 10, 5));
+        let region = Region::from_points(IVec3::new(-3, 12, 2), IVec3::new(0, 10, 5));
         let data = world.get_block_region(region);
 
         assert_eq!(data.len(), 4 * 3 * 4);
